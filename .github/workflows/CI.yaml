@@ -1,0 +1,44 @@
+name: "CI"
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: cargo test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - run: cargo test --all-features
+
+  # Check formatting with rustfmt
+  formatting:
+    name: cargo fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Ensure rustfmt is installed and setup problem matcher
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: rustfmt
+      - name: Rustfmt Check
+        uses: actions-rust-lang/rustfmt@v1
+
+  # Check licensing and produce a list of licenses
+  licensing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cargo-about
+        uses: baptiste0928/cargo-install@v3
+        with:
+          crate: cargo-about
+          version: "0.6.4"
+      - name: Run license check
+        run: cargo about generate about.hbs > license.html
+      - name: Archive license file
+        uses: actions/upload-artifact@v4
+        with:
+          name: license
+          path: license.html

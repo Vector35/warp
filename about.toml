@@ -1,0 +1,6 @@
+# Used in conjuction with `cargo-about` to generate a list of licenses.
+accepted = [
+    "Apache-2.0",
+    "MIT",
+    "Unicode-DFS-2016"
+]
