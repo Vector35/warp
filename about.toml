@@ -1,0 +1,14 @@
+# Used in conjuction with `cargo-about` to generate a list of licenses.
+accepted = [
+    "Apache-2.0",
+    "MIT",
+    "Unicode-DFS-2016",
+    "OFL-1.1",
+    "BSL-1.0",
+    "BSD-3-Clause",
+    "BSD-2-Clause",
+    "LicenseRef-UFL-1.0",
+    "NOASSERTION",
+    "ISC",
+    "Zlib"
+]

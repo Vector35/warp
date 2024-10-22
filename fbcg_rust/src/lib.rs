@@ -1,4 +1,5 @@
 #[allow(warnings)]
+#[rustfmt::skip]
 pub mod gen_flatbuffers;
 
 pub use gen_flatbuffers::sig_bin as fb_sig;

@@ -7,8 +7,7 @@ edition = "2021"
 crate-type = ["lib", "cdylib"]
 
 [dependencies]
-binaryninja = { path = "../../binaryninja/api/rust", features = ["rayon"] }
-binaryninjacore-sys = { path = "../../binaryninja/api/rust/binaryninjacore-sys" }
+binaryninja = { workspace = true }
 typebuild = { path = "../typebuild" }
 symbolbuild = { path = "../symbolbuild" }
 signaturebuild = { path = "../signaturebuild" }
