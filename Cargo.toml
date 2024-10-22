@@ -10,6 +10,11 @@ members = [
     "warp_binja"
 ]
 
+[workspace.dependencies]
+#binaryninja = { path = "../../binaryninja/api/rust", features = ["rayon"] }
+# NOTE: You must update the revision manually when making changes in the `binaryninja` crate.
+binaryninja = { git = "https://github.com/Vector35/binaryninja-api.git", rev = "bca07d7", features = ["rayon"] }
+
 [profile.release]
 panic = "abort"
 lto = true
