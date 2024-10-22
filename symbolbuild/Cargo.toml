@@ -1,0 +1,11 @@
+[package]
+name = "symbolbuild"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fbcg_rust = { path = "../fbcg_rust" }
+flatbuffers = "24.3.25"
+
+[dev-dependencies]
+criterion = "0.5.1"

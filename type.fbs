@@ -1,0 +1,275 @@
+namespace TypeBin;
+
+file_identifier "TBIN";
+file_extension "tbin";
+
+struct UnsignedBitOffset {
+    value:ulong;
+}
+
+struct BitOffset {
+    value:long;
+}
+
+struct BitShift {
+    value:long;
+}
+
+struct BitSize {
+    value:ulong;
+}
+
+struct BitWidth {
+    value:ushort;
+}
+
+table ConstantModifierClass {}
+table VolatileModifierClass {}
+
+table DescriptorModifierClass {
+    description:string;
+}
+
+table MetadataModifierClass {
+    key:string;
+    value:[ubyte];
+}
+
+union TypeModifierClass {
+    ConstantModifierClass,
+    VolatileModifierClass,
+    DescriptorModifierClass,
+    // Used for tooling specific metadata.
+    // If the metadata can be generic create a new modifier class.
+    MetadataModifierClass
+}
+
+table TypeModifier {
+    // TODO: Add modifier confidence?
+    class:TypeModifierClass;
+}
+
+table AccessAlignment {}
+
+table FixedAlignment {
+    width:BitWidth;
+}
+
+union TypeAlignment {
+    // TODO: Document wording
+    // Alignment is "natural" to the access width.
+    AccessAlignment,
+    // Alignment is fixed to a width, i.e. __packed is 8 bits
+    FixedAlignment
+}
+
+// A zero sized type with no information.
+table Void {}
+
+// TODO: Boolean is actually an enum? False = 0, True (everything else)
+// 0 is false, everything else is true
+table Boolean {
+    // Optional, default to C bool width.
+    width:BitWidth;
+}
+
+table Float {
+    // Optional, default to C float width.
+    width:BitWidth;
+}
+
+table Character {
+    // Optional, default to C char width.
+    width:BitWidth;
+}
+
+table Integer {
+    // Optional, default to C int width.
+    width:BitWidth;
+    // Defaults to true.
+    signed:bool;
+}
+
+enum PointerAddressing : byte {
+    Absolute = 0,
+    // TODO: Document that the base is undefined, do we expect it to be the image base?
+    RelativeBase,
+    RelativeSelf,
+}
+
+table Pointer {
+    // Optional, default to C address width.
+    width:BitWidth;
+    // Shift the access of the child by this many bits (+/-). Typically used for C++ thisptr adjustments.
+    // TODO: Rename to adjustment? Shift will mean >> <<
+    shift:BitShift;
+    child:Type;
+    // Pointers that are not absolute must specify an addressing to address its memory.
+    addressing:PointerAddressing;
+    // Offset the address by this many bits (+/-). Typically used in conjuction with a relative self addressing.
+    offset:BitOffset;
+}
+
+enum ArrayModifiers : ubyte (bit_flags) {
+    NullTerminated = 0,
+}
+
+table Array {
+    type:Type (required);
+    // The number of array indices, optional in cases where the array is dynamically sized.
+    length:ulong;
+    modifiers:ArrayModifiers;
+}
+
+enum StructureMemberModifiers : ubyte (bit_flags) {
+    // "private" to the structure, means if something references this its a coupled function.
+    Internal = 0,
+    // Flatten out member structures into its members, effectively inheriting them
+    Flattened
+}
+
+table StructureMember {
+    name:string;
+    offset:UnsignedBitOffset (required);
+    // TODO: If we want to extend a struct to a specific size we can add a structure member with no type at a specific offset?
+    type:Type (required);
+    modifiers:StructureMemberModifiers;
+}
+
+table Structure {
+    // NOTE: Ordering not enforced.
+    members:[StructureMember];
+}
+
+table EnumerationMember {
+    name:string;
+    constant:ulong;
+}
+
+table Enumeration {
+    // Type of the member constant.
+    member_type:Type (required);
+    // NOTE: Ordering not enforced.
+    // NOTE: First member MUST have a constant.
+    members:[EnumerationMember];
+}
+
+table UnionMember {
+    // TODO: Make this required? Anonymous union members?
+    name:string;
+    type:Type (required);
+    // TODO: offset? if we add offset then we should just make this a structure IMO
+}
+
+table Union {
+    // NOTE: Ordering not enforced.
+    members:[UnionMember];
+}
+
+// This is a special type that is used for functions to add
+table CallingConvention {
+    name:string;
+}
+
+table RegisterLocation {
+    // TODO: How do we reference the register? By bare int id?
+    // TODO: Codifying the architecture registers will force all tools to resolve the correct register
+    id:ulong;
+}
+
+table StackLocation {
+    offset:BitOffset (required);
+}
+
+union LocationClass {
+    // TODO: Register can have multiple fields?
+    RegisterLocation,
+    StackLocation,
+}
+
+table FunctionMemberLocation {
+    // TODO: Instead of saying register or stack, we should say positional or variadic
+    // TODO: Then with the positional index we can associate it with the calling convention...
+    class:LocationClass;
+}
+
+table FunctionMember {
+    // The name of the function member, optional in cases where one is not observed.
+    name:string;
+    // TODO: What if function members did not have a type? use whole register? stack with zero size?
+    type:Type (required);
+    // If the location is not available then default to the location specified by the member index.
+    // NOTE: The locations must be equal to or greater than the size of `type`.
+    locations:[FunctionMemberLocation];
+}
+
+table Function {
+    // A reference to the functions calling convention.
+    calling_convention:CallingConvention;
+    // Ordered list of function param arguments.
+    in_members:[FunctionMember];
+    // Ordered list of function return arguments.
+    out_members:[FunctionMember];
+}
+
+// Allowing references drastically complicates this.
+// To reduce complexity:
+//  1. No reference is mutable
+//  2. Types can refer to ancestors but not descendants
+//  3. Upgrades are not required, this means that you must keep the ancestors around forever.
+//      a. This is not a bad thing! If a user is working on and older version of Binary Ninja they can be sure the types they are referencing are not going to be changed from under them (platform types especially).
+//      b. This is rarely the case, assuming the type is copied to the BNDB we can purge old types globally.
+// Two issues arise from this:
+//  1. Performance, having to update all references in a BNDB (or anything else) instead of just mutating the type referenced (what we do now).
+//  2. In the event you open a BNDB and some types were added that upgrade other types, we want to be able to upgrade all
+//     The types to that new type, any non-upgraded type becomes dangling.
+//      a. This should not be an issue, but if it is, we cannot introduce until its fixed.
+//  3. Self referential types cannot deterministically get a reference.
+//      a. In the event of a self reference we could reference based off name?
+table Referrer {
+    // Unique GUID, can either be in-memory, on-disk, or networked.
+    guid:string;
+    name:string;
+}
+
+union TypeClass {
+    Void,
+    Boolean,
+    Integer,
+    Character,
+    Float,
+    Pointer,
+    Array,
+    Structure,
+    Enumeration,
+    Union,
+    Function,
+    Referrer,
+}
+
+table Type {
+    // The name is just a name, it does not actually refer to the backing type.
+    name:string;
+    // The actual type representation.
+    class:TypeClass (required);
+    // Confidence is assumed to be maximal if not specified. Any type with a lesser confidence can be assumed to be less truthy.
+    confidence:ubyte = 255;
+    // TODO: Change docs.
+    // Alignment of type, if not present assume AccessAlignment.
+    alignment:TypeAlignment;
+    // Modifiers for the type, can store arbitrary data as well.
+    modifiers:[TypeModifier];
+    // A list of older versions of the type, this is used to update references to the latest.
+    ancestors:[string];
+}
+
+table ComputedType {
+    guid:string (required);
+    type:Type;
+}
+
+table Data {
+    types:[ComputedType];
+}
+
+root_type Data;

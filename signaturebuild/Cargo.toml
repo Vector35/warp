@@ -1,0 +1,18 @@
+[package]
+name = "signaturebuild"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fbcg_rust = { path = "../fbcg_rust" }
+flatbuffers = "24.3.25"
+bon = "2.3.0"
+uuid = { version = "1.11.0", features = ["v5"]}
+typebuild = { path = "../typebuild" }
+symbolbuild = { path = "../symbolbuild" }
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[build-dependencies]
+flatbuffers-build = "0.2.0"

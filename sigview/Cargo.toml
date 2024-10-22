@@ -1,0 +1,15 @@
+[package]
+name = "sigview"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+signaturebuild = { path = "../signaturebuild" }
+log = "0.4"
+env_logger = "0.11.5"
+eframe = "0.29.1"
+egui_extras = "0.29.1"
+rfd = "0.15.0"
+egui_graphs = "0.22.0"
+egui_virtual_list = "0.5.0"
+petgraph = "0.6.5"

@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "typebin"
+version = "0.1.0"
+description = ""
+authors = ["Mason Reed <mason@vector35.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+aiohttp = "^3.10.8"
+beautifulsoup4 = "^4.12.3"
+ar = "^1.0.0"
+zstandard = "^0.23.0"
+xtarfile = "^0.2.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+

@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+members = [
+    "fbcg_rust", 
+    "sigem",
+    "signaturebuild", 
+    "sigview",
+    "symbolbuild",
+    "typebuild",
+    "warp_binja"
+]
+
+[profile.release]
+panic = "abort"
+lto = true
+debug = "full"

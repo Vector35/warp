@@ -1,0 +1,10 @@
+[package]
+name = "fbcg_rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+flatbuffers = "24.3.25"
+
+[build-dependencies]
+flatbuffers-build = "0.2.0"

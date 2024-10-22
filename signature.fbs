@@ -1,0 +1,49 @@
+include "type.fbs";
+include "symbol.fbs";
+
+namespace SigBin;
+
+file_identifier "SBIN";
+file_extension "sbin";
+
+table BasicBlock {
+    guid:string (required);
+    // successors:[string];
+    // predecessors:[string];
+}
+
+table FunctionConstraint {
+    guid:string;
+    // In cases where a function guid was not able to be generated, we can match on symbol.
+    symbol:SymbolBin.Symbol;
+    // The byte offset from the start of the constrained function.
+    // A negative number would indicate that the constraint occurs before the start of the function.
+    offset:long;
+}
+
+table FunctionConstraints {
+    // Adjacent functions.
+    adjacent:[FunctionConstraint];
+    // Call sites within the function.
+    call_sites:[FunctionConstraint];
+    // Callers to the function.
+    caller_sites:[FunctionConstraint];
+}
+
+table Function {
+    // TODO: Add architecture, this is required to support multi-arch binaries...
+    guid:string (required);
+    symbol:SymbolBin.Symbol;
+    type:TypeBin.Type;
+    constraints:FunctionConstraints;
+    // TODO: Remove this and just have a list of basic blocks.
+    // TODO: We need to support multiple entry basic blocks.
+    entry:BasicBlock;
+}
+
+table Data {
+    functions:[Function];
+    types:[TypeBin.ComputedType];
+}
+
+root_type Data;
