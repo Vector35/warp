@@ -1,6 +1,10 @@
 use flatbuffers_build::BuilderOptions;
 use std::path::PathBuf;
 
+#[cfg(feature = "dont_build")]
+pub fn main() {}
+
+#[cfg(not(feature = "dont_build"))]
 pub fn main() {
     // Remove leftover symlink dir.
     let _ = std::fs::remove_dir_all("src/gen_flatbuffers");
@@ -10,7 +14,7 @@ pub fn main() {
         workspace_dir.join("symbol.fbs"),
         workspace_dir.join("signature.fbs"),
     ])
-    .set_symlink_directory("src/gen_flatbuffers")
-    .compile()
-    .expect("flatbuffer compilation failed");
+        .set_output_path("src/gen_flatbuffers")
+        .compile()
+        .expect("flatbuffer compilation failed");
 }

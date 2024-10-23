@@ -13,6 +13,3 @@ symbolbuild = { path = "../symbolbuild" }
 
 [dev-dependencies]
 criterion = "0.5.1"
-
-[build-dependencies]
-flatbuffers-build = "0.2.0"
