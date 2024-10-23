@@ -4,7 +4,7 @@ pub fn main() {
 
     // Remove leftover symlink dir.
     let _ = std::fs::remove_dir_all("src/gen_flatbuffers");
-    let workspace_dir: PathBuf = env!("CARGO_WORKSPACE_DIR").into();
+    let workspace_dir: PathBuf = std::env::var("CARGO_WORKSPACE_DIR").unwrap().into();
     BuilderOptions::new_with_files([
         workspace_dir.join("type.fbs"),
         workspace_dir.join("symbol.fbs"),
