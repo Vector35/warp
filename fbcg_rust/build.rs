@@ -5,7 +5,7 @@ pub fn main() {}
 pub fn main() {
     use flatbuffers_build::BuilderOptions;
     use std::path::PathBuf;
-    
+
     // Remove leftover symlink dir.
     let _ = std::fs::remove_dir_all("src/gen_flatbuffers");
     let workspace_dir: PathBuf = env!("CARGO_WORKSPACE_DIR").into();
@@ -14,7 +14,7 @@ pub fn main() {
         workspace_dir.join("symbol.fbs"),
         workspace_dir.join("signature.fbs"),
     ])
-        .set_output_path("src/gen_flatbuffers")
-        .compile()
-        .expect("flatbuffer compilation failed");
+    .set_output_path("src/gen_flatbuffers")
+    .compile()
+    .expect("flatbuffer compilation failed");
 }
