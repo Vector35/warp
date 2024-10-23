@@ -16,11 +16,10 @@ use signaturebuild::function::constraints::FunctionConstraint;
 use signaturebuild::prelude::*;
 
 use crate::convert::from_bn_symbol;
-use crate::{build_function, entry_basic_block_guid, function_guid, Relocations};
+use crate::{build_function, function_guid};
 
 pub static FUNCTION_CACHE: OnceLock<DashMap<ViewID, FunctionCache>> = OnceLock::new();
 pub static GUID_CACHE: OnceLock<DashMap<ViewID, GUIDCache>> = OnceLock::new();
-pub static RELOC_CACHE: OnceLock<DashMap<ViewID, Relocations>> = OnceLock::new();
 
 pub fn cached_function<A: Architecture, M: FunctionMutability, V: NonSSAVariant>(
     function: &BNFunction,
@@ -38,25 +37,6 @@ pub fn cached_function<A: Architecture, M: FunctionMutability, V: NonSSAVariant>
             function
         }
     }
-}
-
-pub fn cached_function_entry_block<A: Architecture, M: FunctionMutability, V: NonSSAVariant>(
-    function: &BNFunction,
-    llil: &llil::Function<A, M, NonSSA<V>>,
-) -> Option<BasicBlock> {
-    let view = function.view();
-    let view_id = ViewID::from(view.as_ref());
-    let reloc_cache = RELOC_CACHE.get_or_init(Default::default);
-    let guid = match reloc_cache.get(&view_id) {
-        Some(relocations) => entry_basic_block_guid(function, &relocations, llil),
-        None => {
-            let relocations = view.get_relocation_ranges();
-            let guid = entry_basic_block_guid(function, &relocations, llil);
-            reloc_cache.insert(view_id, relocations);
-            guid
-        }
-    };
-    Some(BasicBlock::new(guid?))
 }
 
 pub fn cached_call_site_constraints(function: &BNFunction) -> HashSet<FunctionConstraint> {
@@ -225,30 +205,15 @@ impl GUIDCache {
         function: &BNFunction,
         llil: &llil::Function<A, M, NonSSA<V>>,
     ) -> Option<FunctionGUID> {
-        let function_guid_with_relocs = |relocations: &Relocations| {
-            let function_id = FunctionID::from(function);
-            match self.cache.try_get_mut(&function_id) {
-                TryResult::Present(function_guid) => function_guid.value().to_owned(),
-                TryResult::Absent => {
-                    let function_guid = function_guid(function, relocations, llil);
-                    self.cache.insert(function_id, function_guid);
-                    function_guid
-                }
-                TryResult::Locked => function_guid(function, relocations, llil),
+        let function_id = FunctionID::from(function);
+        match self.cache.try_get_mut(&function_id) {
+            TryResult::Present(function_guid) => function_guid.value().to_owned(),
+            TryResult::Absent => {
+                let function_guid = function_guid(function, llil);
+                self.cache.insert(function_id, function_guid);
+                function_guid
             }
-        };
-
-        let view = function.view();
-        let view_id = ViewID::from(view.as_ref());
-        let reloc_cache = RELOC_CACHE.get_or_init(Default::default);
-        match reloc_cache.get(&view_id) {
-            Some(relocations) => function_guid_with_relocs(&relocations),
-            None => {
-                let relocations = view.get_relocation_ranges();
-                let guid = function_guid_with_relocs(&relocations);
-                reloc_cache.insert(view_id, relocations);
-                guid
-            }
+            TryResult::Locked => function_guid(function, llil),
         }
     }
 }

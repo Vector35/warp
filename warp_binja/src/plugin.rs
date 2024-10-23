@@ -7,7 +7,7 @@ use binaryninja::rc::Ref;
 use binaryninja::tags::TagType;
 
 use crate::build_function;
-use crate::cache::{ViewID, FUNCTION_CACHE, GUID_CACHE, RELOC_CACHE};
+use crate::cache::{ViewID, FUNCTION_CACHE, GUID_CACHE};
 use crate::convert::{to_bn_symbol_at_address, to_bn_type};
 use crate::matcher::{PlatformID, PLAT_MATCHER_CACHE};
 
@@ -77,11 +77,6 @@ impl Command for DebugCache {
         let function_guid_cache = GUID_CACHE.get_or_init(Default::default);
         if let Some(cache) = function_guid_cache.get(&view_id) {
             log::info!("View function guids: {}", cache.cache.len());
-        }
-
-        let relocation_cache = RELOC_CACHE.get_or_init(Default::default);
-        if let Some(cache) = relocation_cache.get(&view_id) {
-            log::info!("Relocations: {}", cache.len());
         }
 
         let plat_cache = PLAT_MATCHER_CACHE.get_or_init(Default::default);

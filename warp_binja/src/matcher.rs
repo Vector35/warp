@@ -1,6 +1,6 @@
-use std::cmp::Ordering;
 use dashmap::DashMap;
 use fastbloom::BloomFilter;
+use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::hash::{DefaultHasher, Hasher};
 use std::path::PathBuf;
@@ -18,14 +18,14 @@ use binaryninja::rc::Guard;
 use binaryninja::rc::Ref as BNRef;
 
 use signaturebuild::function::{Function, FunctionGUID};
+use signaturebuild::prelude::BasicBlock;
 use signaturebuild::Data;
 use typebuild::guid::TypeGUID;
 use typebuild::prelude::{Type, TypeClass};
 
-use crate::cache::{
-    cached_call_site_constraints, cached_function_entry_block, cached_function_guid, FunctionID,
-};
+use crate::cache::{cached_call_site_constraints, cached_function_guid, FunctionID};
 use crate::convert::to_bn_type;
+use crate::entry_basic_block_guid;
 use crate::plugin::on_matched_function;
 
 pub const TRIVIAL_LLIL_THRESHOLD: usize = 8;
@@ -109,6 +109,11 @@ impl Matcher {
                         .push(func.clone());
                     map
                 })
+            })
+            .map(|(guid, mut funcs)| {
+                funcs.sort_by_key(|f| f.symbol.name.to_owned());
+                funcs.dedup_by_key(|f| f.symbol.name.to_owned());
+                (guid, funcs)
             })
             .collect();
 
@@ -279,7 +284,7 @@ impl Matcher {
         let is_function_trivial = { llil.instruction_count() < TRIVIAL_LLIL_THRESHOLD };
 
         // Check to see if the functions entry block is even in the dataset
-        let entry_block = cached_function_entry_block(function, llil);
+        let entry_block = entry_basic_block_guid(function, llil).map(BasicBlock::new);
         if self.basic_block_filter.contains(&entry_block) {
             // Build the full function guid now
             if let Some(warp_func_guid) = cached_function_guid(function, llil) {
@@ -295,6 +300,12 @@ impl Matcher {
                             function.start()
                         );
                         on_new_match(matched_function);
+                    } else {
+                        log::error!(
+                            "Failed to find matching function `{}`... 0x{:x}",
+                            matched.len(),
+                            function.start()
+                        );
                     }
                 }
             }
@@ -334,7 +345,7 @@ impl Matcher {
             match common_guid_count.cmp(&highest_guid_count) {
                 Ordering::Equal => {
                     // Multiple matches with same count, don't match on ONE of them.
-                    matched_guid_func = None; 
+                    matched_guid_func = None;
                 }
                 Ordering::Greater => {
                     highest_guid_count = common_guid_count;
