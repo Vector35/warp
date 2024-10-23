@@ -24,8 +24,8 @@ struct Args {
     ///
     /// NOTE: If the file exists we will exit early to prevent wasted effort.
     /// NOTE: If the file is created while we are running it will still be overwritten.
-    #[arg(short, long, default_value_t = false)]
-    overwrite: bool,
+    #[arg(short, long)]
+    overwrite: Option<bool>,
 
     /// The external debug information file to use
     #[arg(short, long)]
@@ -39,7 +39,7 @@ fn main() {
     // If no output file was given, just prepend binary with extension sbin
     let output_file = args.output.unwrap_or(args.binary.with_extension("sbin"));
 
-    if output_file.exists() && !args.overwrite {
+    if output_file.exists() && !args.overwrite.unwrap_or(false) {
         log::info!("Output file already exists, skipping... {:?}", output_file);
         return;
     }
