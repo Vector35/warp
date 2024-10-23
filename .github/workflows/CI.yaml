@@ -6,7 +6,7 @@ on:
 jobs:
   test:
     name: cargo test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get install -y flatbuffers-compiler
@@ -16,7 +16,7 @@ jobs:
   # Check formatting with rustfmt
   formatting:
     name: cargo fmt
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get install -y flatbuffers-compiler
@@ -29,7 +29,7 @@ jobs:
 
   # Check licensing and produce a list of licenses
   licensing:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get install -y flatbuffers-compiler
