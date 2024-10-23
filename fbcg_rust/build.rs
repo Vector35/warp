@@ -1,7 +1,3 @@
-#[cfg(feature = "dont_build")]
-pub fn main() {}
-
-#[cfg(not(feature = "dont_build"))]
 pub fn main() {
     use flatbuffers_build::BuilderOptions;
     use std::path::PathBuf;
@@ -14,7 +10,7 @@ pub fn main() {
         workspace_dir.join("symbol.fbs"),
         workspace_dir.join("signature.fbs"),
     ])
-    .set_output_path("src/gen_flatbuffers")
+    .set_symlink_directory("src/gen_flatbuffers")
     .compile()
     .expect("flatbuffer compilation failed");
 }

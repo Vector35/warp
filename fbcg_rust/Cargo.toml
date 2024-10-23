@@ -7,7 +7,4 @@ edition = "2021"
 flatbuffers = "24.3.25"
 
 [build-dependencies]
-flatbuffers-build = "0.2.0"
-
-[features]
-dont_build = []
+flatbuffers-build = { git = "https://github.com/emesare/flatbuffers-build" }
