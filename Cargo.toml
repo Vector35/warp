@@ -17,7 +17,7 @@ rand = "0.8.5"
 criterion = "0.5.1"
 
 [build-dependencies]
-flatbuffers-build = { git = "https://github.com/emesare/flatbuffers-build" }
+flatbuffers-build = { git = "https://github.com/emesare/flatbuffers-build", features = ["vendored"] }
 
 [profile.release]
 panic = "abort"

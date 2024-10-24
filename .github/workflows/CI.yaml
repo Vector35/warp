@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
-      - run: cargo test --features flatbuffers-build/vendored # build flatc in CI with vendored feature
+      - run: cargo test
 
   # Check formatting with rustfmt
   formatting:
