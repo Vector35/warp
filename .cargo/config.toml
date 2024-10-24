@@ -1,4 +1,0 @@
-[env]
-# HACK: To get the workspace directory. (See: https://github.com/rust-lang/cargo/issues/3946#issuecomment-973132993)
-# TODO: If we had &[u8] api in flatbuffers-build we could include the file with relative path like that.
-CARGO_WORKSPACE_DIR = { value = "", relative = true }

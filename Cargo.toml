@@ -1,21 +1,29 @@
-[workspace]
-resolver = "2"
-members = [
-    "fbcg_rust", 
-    "sigem",
-    "signaturebuild", 
-    "sigview",
-    "symbolbuild",
-    "typebuild",
-    "warp_binja"
-]
+[package]
+name = "warp"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
 
-[workspace.dependencies]
-#binaryninja = { path = "../../binaryninja/api/rust", features = ["rayon"] }
-# NOTE: You must update the revision manually when making changes in the `binaryninja` crate.
-binaryninja = { git = "https://github.com/Vector35/binaryninja-api.git", rev = "bca07d7", features = ["rayon"] }
+[lib]
+path = "rust/lib.rs"
+
+[dependencies]
+flatbuffers = "24.3.25"
+bon = "2.3.0"
+uuid = { version = "1.11.0", features = ["v5"]}
+rand = "0.8.5"
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[build-dependencies]
+flatbuffers-build = { git = "https://github.com/emesare/flatbuffers-build" }
 
 [profile.release]
 panic = "abort"
 lto = true
 debug = "full"
+
+[[example]]
+name = "simple"
+path = "rust/examples/simple.rs"

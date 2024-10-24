@@ -6,7 +6,8 @@ use crate::graph::FunctionGraph;
 use eframe::egui;
 use eframe::egui::{Direction, Layout, ScrollArea, Ui};
 use egui_virtual_list::VirtualList;
-use signaturebuild::prelude::*;
+use warp::signature::Data;
+use warp::signature::function::Function;
 // TODO: Add some collision viewer and graph viewer
 // TODO: Load multiple Data for collision.
 // TODO: Type viewer (data.types)

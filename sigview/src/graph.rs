@@ -2,7 +2,7 @@ use eframe::egui;
 use eframe::egui::Ui;
 use egui_graphs::{Graph, GraphView, SettingsInteraction, SettingsNavigation, SettingsStyle};
 use petgraph::prelude::StableGraph;
-use signaturebuild::prelude::{Function, FunctionGUID};
+use warp::signature::function::{Function, FunctionGUID};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub struct FunctionNode {
