@@ -6,7 +6,10 @@ on:
 jobs:
   test:
     name: cargo test
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -15,7 +18,7 @@ jobs:
   # Check formatting with rustfmt
   formatting:
     name: cargo fmt
-    runs-on: ubuntu-24.04
+    runs-on:  ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       # Ensure rustfmt is installed and setup problem matcher
@@ -27,7 +30,7 @@ jobs:
 
   # Check licensing and produce a list of licenses
   licensing:
-    runs-on: ubuntu-24.04
+    runs-on:  ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install cargo-about
