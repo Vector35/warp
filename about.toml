@@ -10,5 +10,6 @@ accepted = [
     "LicenseRef-UFL-1.0",
     "NOASSERTION",
     "ISC",
-    "Zlib"
+    "Zlib",
+    "OpenSSL"
 ]
