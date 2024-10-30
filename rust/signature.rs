@@ -142,7 +142,7 @@ mod tests {
         comp_ty.guid = guid.into(); // Adjust the guid for testing.
         comp_ty
     }
-    
+
     #[test]
     fn test_merge() {
         let first_data = Data::new(
@@ -168,7 +168,12 @@ mod tests {
         );
 
         let merged_data = Data::merge(&[first_data, second_data]);
-        assert_eq!(merged_data.functions.len(), 3, "{:#?}", merged_data.functions);
+        assert_eq!(
+            merged_data.functions.len(),
+            3,
+            "{:#?}",
+            merged_data.functions
+        );
         assert_eq!(merged_data.types.len(), 3, "{:#?}", merged_data.types);
     }
 }
