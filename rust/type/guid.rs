@@ -7,7 +7,7 @@ use uuid::{uuid, Uuid};
 
 pub const NAMESPACE_TYPEBIN: Uuid = uuid!("01929b90-72e6-73e6-9da1-2b6462e407a6");
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct TypeGUID {
     guid: Uuid,
 }

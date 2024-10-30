@@ -12,7 +12,7 @@ pub mod constraints;
 
 pub const NAMESPACE_FUNCTION: Uuid = uuid!("0192a179-61ac-7cef-88ed-012296e9492f");
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct FunctionGUID {
     pub guid: Uuid,
 }
