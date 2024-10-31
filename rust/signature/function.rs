@@ -42,6 +42,14 @@ impl FromStr for FunctionGUID {
     }
 }
 
+impl TryFrom<&str> for FunctionGUID {
+    type Error = uuid::Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::from_str(value)
+    }
+}
+
 impl From<&[u8]> for FunctionGUID {
     fn from(value: &[u8]) -> Self {
         Self {
@@ -127,6 +135,7 @@ impl From<fb::Function<'_>> for Function {
 mod tests {
     use crate::r#type::class::TypeClass;
     use crate::r#type::Type;
+    use crate::signature::basic_block::BasicBlockGUID;
     use crate::signature::function::constraints::FunctionConstraints;
     use crate::signature::function::{Function, FunctionGUID};
     use crate::signature::Data;
@@ -135,14 +144,32 @@ mod tests {
     use uuid::{uuid, Uuid};
 
     const EMPTY_FN_UUID: Uuid = uuid!("db867a3e-416a-5d7f-aa6d-b8ae6be36da2");
+    const NONEMPTY_FN_UUID: Uuid = uuid!("7a55be03-76b7-5cb5-bae9-4edcf47795ac");
+
+    const FIRST_BB_UUID: Uuid = uuid!("036cccf0-8239-5b84-a811-60efc2d7eeb0");
+    const SECOND_BB_UUID: Uuid = uuid!("3ed5c023-658d-5511-9710-40814f31af50");
+    const THIRD_BB_UUID: Uuid = uuid!("8a076c92-0ba0-540d-b724-7fd5838da9df");
 
     fn empty_fn_guid() -> FunctionGUID {
         FunctionGUID::from_basic_blocks(&[])
     }
 
+    fn nonempty_fn_guid() -> FunctionGUID {
+        FunctionGUID::from_basic_blocks(&[
+            BasicBlockGUID::from(FIRST_BB_UUID),
+            BasicBlockGUID::from(SECOND_BB_UUID),
+            BasicBlockGUID::from(THIRD_BB_UUID),
+        ])
+    }
+
     #[test]
     fn empty_function_guid() {
         assert_eq!(FunctionGUID::from(EMPTY_FN_UUID), empty_fn_guid());
+    }
+
+    #[test]
+    fn nonempty_function_guid() {
+        assert_eq!(FunctionGUID::from(NONEMPTY_FN_UUID), nonempty_fn_guid());
     }
 
     fn empty_function() -> Function {

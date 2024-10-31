@@ -30,7 +30,7 @@ impl DataSymbolClass {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum SymbolClass {
     Function,
     Data,
