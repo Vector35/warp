@@ -28,24 +28,14 @@ impl Data {
             .map(Into::into)
     }
 
-    pub fn merge(entries: &[Data]) -> Data {
-        let mut merged_data = Data::default();
-        merged_data
-            .types
-            .extend(entries.iter().flat_map(|e| &e.types).cloned());
-        // Now sort and remove types with the same guid.
-        merged_data
-            .types
-            .sort_unstable_by(|a, b| a.guid.cmp(&b.guid));
-        merged_data.types.dedup_by_key(|ty| ty.guid);
-        merged_data
-            .functions
-            .extend(entries.iter().flat_map(|e| &e.functions).cloned());
-        // Now sort and remove functions with the same symbol and guid.
-        merged_data
-            .functions
+    pub fn deduplicate(&mut self) {
+        // Sort and remove types with the same guid.
+        self.types.sort_unstable_by(|a, b| a.guid.cmp(&b.guid));
+        self.types.dedup_by_key(|ty| ty.guid);
+        // Sort and remove functions with the same symbol and guid.
+        self.functions
             .sort_unstable_by(|a, b| a.symbol.name.cmp(&b.symbol.name));
-        merged_data.functions.dedup_by(|a, b| {
+        self.functions.dedup_by(|a, b| {
             if a.guid == b.guid {
                 // Keep `a`s constraints.
                 b.constraints
@@ -62,6 +52,18 @@ impl Data {
                 false
             }
         });
+    }
+
+    pub fn merge(entries: &[Data]) -> Data {
+        let mut merged_data = Data::default();
+        merged_data
+            .types
+            .extend(entries.iter().flat_map(|e| &e.types).cloned());
+        merged_data
+            .functions
+            .extend(entries.iter().flat_map(|e| &e.functions).cloned());
+        // Chances are we will have a bunch of duplicated data.
+        merged_data.deduplicate();
         merged_data
     }
 
