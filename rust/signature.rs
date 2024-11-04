@@ -1,7 +1,9 @@
+use std::io::Write;
 use crate::fb_sig as fb;
 use crate::r#type::ComputedType;
 use crate::signature::function::Function;
 use flatbuffers::{FlatBufferBuilder, WIPOffset};
+use flate2::Compression;
 
 pub mod basic_block;
 pub mod function;
@@ -18,23 +20,25 @@ impl Data {
     }
 
     pub fn from_bytes(buf: &[u8]) -> Option<Self> {
+        let mut decoder = flate2::read::GzDecoder::new(buf);
+        let mut decompressed_data = Vec::new();
+        std::io::copy(&mut decoder, &mut decompressed_data).ok()?;
         let opts = flatbuffers::VerifierOptions {
             // Trust me bro.
             max_tables: 10_000_000,
             ..Default::default()
         };
-        flatbuffers::root_with_opts::<fb::Data>(&opts, buf)
+        flatbuffers::root_with_opts::<fb::Data>(&opts, &decompressed_data)
             .ok()
             .map(Into::into)
     }
 
     pub fn deduplicate(&mut self) {
         // Sort and remove types with the same guid.
-        self.types.sort_unstable_by(|a, b| a.guid.cmp(&b.guid));
+        self.types.sort_by_key(|ty| ty.guid);
         self.types.dedup_by_key(|ty| ty.guid);
         // Sort and remove functions with the same symbol and guid.
-        self.functions
-            .sort_unstable_by(|a, b| a.symbol.name.cmp(&b.symbol.name));
+        self.functions.sort_by_key(|func| func.guid);
         self.functions.dedup_by(|a, b| {
             if a.guid == b.guid {
                 // Keep `a`s constraints.
@@ -71,7 +75,9 @@ impl Data {
         let mut builder = FlatBufferBuilder::new();
         let fb_data = self.create(&mut builder);
         builder.finish_minimal(fb_data);
-        builder.finished_data().to_vec()
+        let mut encoder = flate2::write::GzEncoder::new(Vec::new(), Compression::default());
+        encoder.write_all(builder.finished_data()).expect("Failed to compress data");
+        encoder.finish().expect("Failed to finish compression")
     }
 
     pub(crate) fn create<'a>(
