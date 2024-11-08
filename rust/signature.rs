@@ -1,9 +1,9 @@
-use std::io::Write;
 use crate::fb_sig as fb;
 use crate::r#type::ComputedType;
 use crate::signature::function::Function;
 use flatbuffers::{FlatBufferBuilder, WIPOffset};
 use flate2::Compression;
+use std::io::Write;
 
 pub mod basic_block;
 pub mod function;
@@ -75,8 +75,11 @@ impl Data {
         let mut builder = FlatBufferBuilder::new();
         let fb_data = self.create(&mut builder);
         builder.finish_minimal(fb_data);
+        // Move this to Data spec enum or something so that in the future we can do uncompressed versions.
         let mut encoder = flate2::write::GzEncoder::new(Vec::new(), Compression::default());
-        encoder.write_all(builder.finished_data()).expect("Failed to compress data");
+        encoder
+            .write_all(builder.finished_data())
+            .expect("Failed to compress data");
         encoder.finish().expect("Failed to finish compression")
     }
 
