@@ -38,7 +38,8 @@ impl Data {
         self.types.sort_by_key(|ty| ty.guid);
         self.types.dedup_by_key(|ty| ty.guid);
         // Sort and remove functions with the same symbol and guid.
-        self.functions.sort_by_key(|func| func.guid);
+        self.functions
+            .sort_by(|a, b| a.guid.cmp(&b.guid).then_with(|| a.symbol.cmp(&b.symbol)));
         self.functions.dedup_by(|a, b| {
             if a.guid == b.guid && a.symbol == b.symbol {
                 // Keep `a`s constraints.
@@ -182,6 +183,7 @@ mod tests {
             vec![
                 create_sample_function("func2", FUNC3_GUID),
                 create_sample_function("func3", FUNC2_GUID),
+                create_sample_function("func2", FUNC2_GUID),
             ],
             vec![
                 create_sample_computed_type(TYPE1_GUID),

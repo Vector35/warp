@@ -6,7 +6,7 @@ use flatbuffers::{FlatBufferBuilder, WIPOffset};
 
 pub use fb::SymbolModifiers;
 
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct Symbol {
     pub name: String,
     pub modifiers: SymbolModifiers,
