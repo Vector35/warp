@@ -40,7 +40,7 @@ impl Data {
         // Sort and remove functions with the same symbol and guid.
         self.functions.sort_by_key(|func| func.guid);
         self.functions.dedup_by(|a, b| {
-            if a.guid == b.guid {
+            if a.guid == b.guid && a.symbol == b.symbol {
                 // Keep `a`s constraints.
                 b.constraints
                     .adjacent
@@ -175,10 +175,21 @@ mod tests {
             ],
         );
 
-        let merged_data = Data::merge(&[first_data, second_data]);
+        let third_data = Data::new(
+            vec![
+                create_sample_function("func2", FUNC3_GUID),
+                create_sample_function("func3", FUNC2_GUID),
+            ],
+            vec![
+                create_sample_computed_type(TYPE1_GUID),
+                create_sample_computed_type(TYPE3_GUID),
+            ],
+        );
+
+        let merged_data = Data::merge(&[first_data, second_data, third_data]);
         assert_eq!(
             merged_data.functions.len(),
-            3,
+            5,
             "{:#?}",
             merged_data.functions
         );
