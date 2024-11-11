@@ -1,8 +1,10 @@
 use crate::fb_sig as fb;
 use crate::r#type::ComputedType;
-use crate::signature::function::Function;
+use crate::signature::function::constraints::FunctionConstraint;
+use crate::signature::function::{Function, FunctionGUID};
 use flatbuffers::{FlatBufferBuilder, WIPOffset};
 use flate2::Compression;
+use std::collections::HashMap;
 use std::io::Write;
 
 pub mod basic_block;
@@ -33,6 +35,43 @@ impl Data {
             .map(Into::into)
     }
 
+    // Given all [Data::functions] link the constraints with no GUID to other functions.
+    pub fn link_constraints(&mut self) {
+        // TODO: if symbol name appears more than once, we should remove it from here.
+        let guid_map: HashMap<String, FunctionGUID> = self
+            .functions
+            .iter()
+            .map(|f| (f.symbol.name.to_owned(), f.guid))
+            .collect();
+
+        let resolve_constraint = |mut constraint: FunctionConstraint| {
+            // If we don't have a guid for the constraint grab it from the symbol name
+            if constraint.guid.is_none() {
+                if let Some(symbol) = &constraint.symbol {
+                    constraint.guid = guid_map.get(&symbol.name).copied();
+                }
+            }
+            constraint
+        };
+
+        self.functions.iter_mut().for_each(|f| {
+            f.constraints.call_sites = f
+                .constraints
+                .call_sites
+                .iter()
+                .cloned()
+                .map(resolve_constraint)
+                .collect();
+            f.constraints.adjacent = f
+                .constraints
+                .adjacent
+                .iter()
+                .cloned()
+                .map(resolve_constraint)
+                .collect();
+        });
+    }
+
     pub fn deduplicate(&mut self) {
         // Sort and remove types with the same guid.
         self.types.sort_by_key(|ty| ty.guid);
@@ -59,16 +98,18 @@ impl Data {
         });
     }
 
-    pub fn merge(entries: &[Data]) -> Data {
+    pub fn merge(entries: Vec<Data>) -> Data {
         let mut merged_data = Data::default();
-        merged_data
-            .types
-            .extend(entries.iter().flat_map(|e| &e.types).cloned());
-        merged_data
-            .functions
-            .extend(entries.iter().flat_map(|e| &e.functions).cloned());
+
+        for entry in entries {
+            merged_data.functions.extend(entry.functions);
+            merged_data.types.extend(entry.types);
+        }
+
         // Chances are we will have a bunch of duplicated data.
         merged_data.deduplicate();
+        // Chances are we will have a bunch of stuff to link.
+        merged_data.link_constraints();
         merged_data
     }
 
@@ -155,6 +196,22 @@ mod tests {
         comp_ty
     }
 
+    // Used with `test_link_constraints` test.
+    fn create_sample_function_constraint<T: Into<FunctionGUID>>(
+        name: &str,
+        guid: Option<T>,
+    ) -> FunctionConstraint {
+        FunctionConstraint {
+            guid: guid.map(Into::into),
+            symbol: Some(Symbol {
+                name: name.to_string(),
+                modifiers: Default::default(),
+                class: SymbolClass::Function,
+            }),
+            offset: 0,
+        }
+    }
+
     #[test]
     fn test_merge() {
         let first_data = Data::new(
@@ -191,7 +248,7 @@ mod tests {
             ],
         );
 
-        let merged_data = Data::merge(&[first_data, second_data, third_data]);
+        let merged_data = Data::merge(vec![first_data, second_data, third_data]);
         assert_eq!(
             merged_data.functions.len(),
             5,
@@ -199,5 +256,43 @@ mod tests {
             merged_data.functions
         );
         assert_eq!(merged_data.types.len(), 3, "{:#?}", merged_data.types);
+    }
+
+    #[test]
+    fn test_link_constraints() {
+        let mut first_data = Data::new(
+            vec![
+                create_sample_function("func1", FUNC1_GUID),
+                create_sample_function("func2", FUNC2_GUID),
+            ],
+            vec![],
+        );
+
+        let mut second_data = Data::new(vec![create_sample_function("func3", FUNC3_GUID)], vec![]);
+
+        first_data.functions[0]
+            .constraints
+            .call_sites
+            .insert(create_sample_function_constraint("func2", Some(FUNC2_GUID)));
+        first_data.functions[1]
+            .constraints
+            .call_sites
+            .insert(create_sample_function_constraint::<Uuid>("func3", None));
+        second_data.functions[0]
+            .constraints
+            .call_sites
+            .insert(create_sample_function_constraint::<Uuid>("func2", None));
+
+        let mut merged_data = Data::merge(vec![first_data, second_data]);
+
+        // Invoke link_constraints to resolve and merge constraints.
+        merged_data.link_constraints();
+        assert_eq!(merged_data.functions.len(), 3);
+        // All function constraints should be resolved.
+        assert!(!merged_data.functions.iter().any(|f| f
+            .constraints
+            .call_sites
+            .iter()
+            .any(|fc| fc.guid == None)));
     }
 }
