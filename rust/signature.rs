@@ -185,7 +185,6 @@ mod tests {
             guid: guid.into(),
             constraints: Default::default(),
             ty: rand::random(),
-            entry: None,
         }
     }
 
@@ -283,7 +282,7 @@ mod tests {
             .call_sites
             .insert(create_sample_function_constraint::<Uuid>("func2", None));
 
-        let mut merged_data = Data::merge(vec![first_data, second_data]);
+        let merged_data = Data::merge(vec![first_data, second_data]);
 
         assert_eq!(merged_data.functions.len(), 3);
         // All function constraints should be resolved.

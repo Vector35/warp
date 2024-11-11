@@ -1,6 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use flatbuffers::FlatBufferBuilder;
-use typebuild::prelude::*;
+use warp::r#type::class::TypeClass;
+use warp::r#type::guid::TypeGUID;
+use warp::r#type::Type;
 
 pub fn void_benchmark(c: &mut Criterion) {
     let void_type = Type::builder()

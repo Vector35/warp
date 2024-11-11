@@ -29,7 +29,6 @@ impl<'a> Function<'a> {
   pub const VT_SYMBOL: flatbuffers::VOffsetT = 6;
   pub const VT_TYPE_: flatbuffers::VOffsetT = 8;
   pub const VT_CONSTRAINTS: flatbuffers::VOffsetT = 10;
-  pub const VT_ENTRY: flatbuffers::VOffsetT = 12;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -41,7 +40,6 @@ impl<'a> Function<'a> {
     args: &'args FunctionArgs<'args>
   ) -> flatbuffers::WIPOffset<Function<'bldr>> {
     let mut builder = FunctionBuilder::new(_fbb);
-    if let Some(x) = args.entry { builder.add_entry(x); }
     if let Some(x) = args.constraints { builder.add_constraints(x); }
     if let Some(x) = args.type_ { builder.add_type_(x); }
     if let Some(x) = args.symbol { builder.add_symbol(x); }
@@ -78,13 +76,6 @@ impl<'a> Function<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<FunctionConstraints>>(Function::VT_CONSTRAINTS, None)}
   }
-  #[inline]
-  pub fn entry(&self) -> Option<BasicBlock<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<BasicBlock>>(Function::VT_ENTRY, None)}
-  }
 }
 
 impl flatbuffers::Verifiable for Function<'_> {
@@ -98,7 +89,6 @@ impl flatbuffers::Verifiable for Function<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<super::symbol_bin::Symbol>>("symbol", Self::VT_SYMBOL, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<super::type_bin::Type>>("type_", Self::VT_TYPE_, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<FunctionConstraints>>("constraints", Self::VT_CONSTRAINTS, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<BasicBlock>>("entry", Self::VT_ENTRY, false)?
      .finish();
     Ok(())
   }
@@ -108,7 +98,6 @@ pub struct FunctionArgs<'a> {
     pub symbol: Option<flatbuffers::WIPOffset<super::symbol_bin::Symbol<'a>>>,
     pub type_: Option<flatbuffers::WIPOffset<super::type_bin::Type<'a>>>,
     pub constraints: Option<flatbuffers::WIPOffset<FunctionConstraints<'a>>>,
-    pub entry: Option<flatbuffers::WIPOffset<BasicBlock<'a>>>,
 }
 impl<'a> Default for FunctionArgs<'a> {
   #[inline]
@@ -118,7 +107,6 @@ impl<'a> Default for FunctionArgs<'a> {
       symbol: None,
       type_: None,
       constraints: None,
-      entry: None,
     }
   }
 }
@@ -145,10 +133,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> FunctionBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<FunctionConstraints>>(Function::VT_CONSTRAINTS, constraints);
   }
   #[inline]
-  pub fn add_entry(&mut self, entry: flatbuffers::WIPOffset<BasicBlock<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<BasicBlock>>(Function::VT_ENTRY, entry);
-  }
-  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> FunctionBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     FunctionBuilder {
@@ -171,7 +155,6 @@ impl core::fmt::Debug for Function<'_> {
       ds.field("symbol", &self.symbol());
       ds.field("type_", &self.type_());
       ds.field("constraints", &self.constraints());
-      ds.field("entry", &self.entry());
       ds.finish()
   }
 }

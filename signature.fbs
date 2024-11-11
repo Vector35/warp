@@ -8,8 +8,8 @@ file_extension "sbin";
 
 table BasicBlock {
     guid:string (required);
-    // successors:[string];
-    // predecessors:[string];
+    // TODO: successors:[string];
+    // TODO: predecessors:[string];
 }
 
 table FunctionConstraint {
@@ -36,9 +36,6 @@ table Function {
     symbol:SymbolBin.Symbol;
     type:TypeBin.Type;
     constraints:FunctionConstraints;
-    // TODO: Remove this and just have a list of basic blocks.
-    // TODO: We need to support multiple entry basic blocks.
-    entry:BasicBlock;
 }
 
 table Data {

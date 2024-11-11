@@ -29,6 +29,14 @@ panic = "abort"
 lto = true
 debug = "full"
 
+[profile.bench]
+lto = true
+
 [[example]]
 name = "simple"
 path = "rust/examples/simple.rs"
+
+[[bench]]
+name = "void"
+path = "rust/benches/void.rs"
+harness = false

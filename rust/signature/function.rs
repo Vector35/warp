@@ -1,6 +1,6 @@
 use crate::fb_sig as fb;
 use crate::r#type::Type;
-use crate::signature::basic_block::{BasicBlock, BasicBlockGUID};
+use crate::signature::basic_block::BasicBlockGUID;
 use crate::signature::function::constraints::FunctionConstraints;
 use crate::symbol::Symbol;
 use flatbuffers::{FlatBufferBuilder, WIPOffset};
@@ -77,7 +77,6 @@ pub struct Function {
     pub symbol: Symbol,
     pub ty: Type,
     pub constraints: FunctionConstraints,
-    pub entry: Option<BasicBlock>,
 }
 
 impl Function {
@@ -102,7 +101,6 @@ impl Function {
         let symbol = self.symbol.create(builder);
         let ty = self.ty.create(builder);
         let constraints = self.constraints.create(builder);
-        let entry = self.entry.as_ref().map(|e| e.create(builder));
         let guid = builder.create_string(&self.guid.to_string());
         fb::Function::create(
             builder,
@@ -111,7 +109,6 @@ impl Function {
                 symbol: Some(symbol),
                 type_: Some(ty),
                 constraints: Some(constraints),
-                entry,
             },
         )
     }
@@ -126,7 +123,6 @@ impl From<fb::Function<'_>> for Function {
             symbol: value.symbol().unwrap().into(),
             ty: ty.unwrap().into(),
             constraints: value.constraints().unwrap().into(),
-            entry: value.entry().map(Into::into),
         }
     }
 }
@@ -181,7 +177,6 @@ mod tests {
                 .class(TypeClass::Void)
                 .build(),
             constraints: FunctionConstraints::default(),
-            entry: None,
         }
     }
 
