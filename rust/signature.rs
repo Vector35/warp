@@ -285,8 +285,6 @@ mod tests {
 
         let mut merged_data = Data::merge(vec![first_data, second_data]);
 
-        // Invoke link_constraints to resolve and merge constraints.
-        merged_data.link_constraints();
         assert_eq!(merged_data.functions.len(), 3);
         // All function constraints should be resolved.
         assert!(!merged_data.functions.iter().any(|f| f
