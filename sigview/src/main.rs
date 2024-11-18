@@ -6,11 +6,11 @@ use crate::graph::FunctionGraph;
 use eframe::egui;
 use eframe::egui::{Direction, Layout, ScrollArea, Ui};
 use egui_virtual_list::VirtualList;
+use warp::r#type::ComputedType;
 use warp::signature::Data;
 use warp::signature::function::Function;
 // TODO: Add some collision viewer and graph viewer
 // TODO: Load multiple Data for collision.
-// TODO: Type viewer (data.types)
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -31,6 +31,7 @@ struct SigView {
     virtual_list: VirtualList,
     selected_graph: Option<FunctionGraph>,
     selected_function_info: Option<Function>,
+    selected_type_info: Option<ComputedType>,
     search_query: String,
 }
 
@@ -41,6 +42,7 @@ impl SigView {
             data: Some(data),
             selected_graph: None,
             selected_function_info: None,
+            selected_type_info: None,
             virtual_list: VirtualList::new(),
             search_query: "".to_string(),
         }
@@ -118,18 +120,55 @@ impl eframe::App for SigView {
                 },
             );
         }
+        
+        if let Some(ty) = self.selected_type_info.clone() {
+            ctx.show_viewport_immediate(
+                egui::ViewportId::from_hash_of("type_info_viewport"),
+                egui::ViewportBuilder::default()
+                    .with_title("Type Info")
+                    .with_inner_size([400.0, 400.0]),
+                |ctx, class| {
+                    assert!(
+                        class == egui::ViewportClass::Immediate,
+                        "This egui backend doesn't support multiple viewports"
+                    );
+
+                    egui::CentralPanel::default().show(ctx, |ui| {
+                        egui::ScrollArea::vertical().show(ui, |ui| {
+                            ui.label(format!("Name: {}", ty.ty.name.clone().unwrap_or("UNNAMED".to_string())));
+                            ui.separator();
+                            ui.label(format!("GUID: {}", ty.guid));
+                            ui.separator();
+                            ui.label(format!("{:#?}", ty.ty));
+                        });
+                    });
+
+                    if ctx.input(|i| i.viewport().close_requested()) {
+                        // Tell parent viewport that we should not show next frame:
+                        self.selected_type_info = None;
+                    }
+                },
+            );
+        }
 
         egui::CentralPanel::default().show(ctx, |ui| {
             self.file_dropper_handler(ui);
-            if let Some(data) = &self.data {
-                ui.label(format!("Data with {} functions...", data.functions.len()));
+            let Some(data) = &self.data else {
+                ui.with_layout(Layout::centered_and_justified(Direction::TopDown), |ui| {
+                    self.file_selector_btn(ui);
+                });
+                return;
+            };
 
-                egui::TextEdit::singleline(&mut self.search_query)
-                    .hint_text("Search...")
-                    .show(ui);
+            ui.label(format!("Data with {} functions and {} types...", data.functions.len(), data.types.len()));
 
-                ui.separator();
+            egui::TextEdit::singleline(&mut self.search_query)
+                .hint_text("Search...")
+                .show(ui);
 
+            ui.separator();
+
+            egui::CollapsingHeader::new("Functions").default_open(false).show(ui, |ui| {
                 let filtered_functions = data
                     .functions
                     .iter()
@@ -150,7 +189,7 @@ impl eframe::App for SigView {
                         |ui, start_index| {
                             let function = filtered_functions[start_index];
                             ui.horizontal(|ui| {
-                                ui.label(format!("Function: {}", function.symbol.name));
+                                ui.label(format!("{}", function.symbol.name));
                                 if ui.button("View Graph").clicked() {
                                     self.selected_graph =
                                         Some(FunctionGraph::from_function(function));
@@ -163,11 +202,41 @@ impl eframe::App for SigView {
                         },
                     );
                 });
-            } else {
-                ui.with_layout(Layout::centered_and_justified(Direction::TopDown), |ui| {
-                    self.file_selector_btn(ui);
+            });
+
+            ui.separator();
+
+            egui::CollapsingHeader::new("Types").default_open(false).show(ui, |ui| {
+                let filtered_types = data
+                    .types
+                    .iter()
+                    .filter(|t| {
+                        t.ty
+                            .name
+                            .as_ref()
+                            .map_or(false, |name| name.to_lowercase().contains(&self.search_query.to_lowercase()))
+                            || t.guid.to_string().contains(&self.search_query)
+                    })
+                    .collect::<Vec<_>>();
+
+                ScrollArea::vertical().show(ui, |ui| {
+                    ui.set_width(ui.available_width());
+                    self.virtual_list.ui_custom_layout(
+                        ui,
+                        filtered_types.len(),
+                        |ui, start_index| {
+                            let ty = filtered_types[start_index];
+                            ui.horizontal(|ui| {
+                                ui.label(format!("{}", ty.ty.name.as_ref().unwrap_or(&ty.guid.to_string())));
+                                if ui.button("View Info").clicked() {
+                                    self.selected_type_info = Some(ty.clone());
+                                }
+                            });
+                            1
+                        },
+                    );
                 });
-            }
+            });
         });
     }
 }
