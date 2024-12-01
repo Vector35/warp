@@ -27,7 +27,7 @@ impl Data {
         std::io::copy(&mut decoder, &mut decompressed_data).ok()?;
         let opts = flatbuffers::VerifierOptions {
             // Trust me bro.
-            max_tables: 10_000_000,
+            max_tables: 100_000_000,
             ..Default::default()
         };
         flatbuffers::root_with_opts::<fb::Data>(&opts, &decompressed_data)
