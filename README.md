@@ -117,6 +117,38 @@ What this means in practice is **WARP** will have less false positives based sol
 When the returned set of functions is greater than one, we can use the list of [Function Constraints](#function-constraints) to select the best possible match.
 However, that comes at the cost of requiring a computed GUID to be created whenever the lookup is requested and that the function GUID is _**always**_ the same.
 
+### WARP vs SigKit
+
+Because WARP is a replacement for SigKit it makes sense to not only talk about the function identification approach, but also the integration with [Binary NInja].
+
+#### SigKit Function Identification
+
+SigKit is rooted as a FLIRT-like signature matcher so to not repeat what is said above, see [here](#function-identification).
+
+#### Binary Ninja Integration
+
+The two main processes that exist for both SigKit and WARP integration with Binary Ninja are the function lookup process and the signature generation process. 
+
+##### Function lookup
+
+SigKit's function lookup process is integrated as a core component to Binary Ninja as such it is not open source, however the process is described [here](https://binary.ninja/2020/03/11/signature-libraries.html).
+
+What this means is **WARP** unlike SigKit can identify a greater number of smaller functions, ones which would be required to be pruned in generation process.
+After looking up a function and successfully matching **WARP** will also be able to apply type information.
+
+##### Signature generation
+
+SigKit's signature generation is provided through user python scripts located [here](https://github.com/Vector35/sigkit/tree/master).
+
+Because of the separation of the signature generation and the core integration the process becomes very cumbersome, specifically the process is too convoluted for smaller samples, and too slow for bigger samples.
+
+#### What does this mean?
+
+WARP can match on a greater number of functions which otherwise would be pruned at the generation process, this is obviously not without its tradeoffs, we generate this function UUID on both ends, meaning that the algorithm must be carefully upgraded to ensure that previously generate UUID's are no longer valid.
+
+Aside from just the matching of functions, we _never_ prune functions when added to the dataset this means we actually can store multiple functions for any given UUID, this is a major advantage for users who can now identify exactly what causes a collision and override, or otherwise understand more about the function.
+
+After matching on a function successfully we can reconstruct the function signature not just the symbol name. SigKit has no information about the function calling convention or the function type.
 
 [1]: https://devblogs.microsoft.com/oldnewthing/20110921-00/?p=9583
 [2]: https://devblogs.microsoft.com/oldnewthing/20221109-00/?p=107373
