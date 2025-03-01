@@ -36,6 +36,10 @@ lto = true
 name = "simple"
 path = "rust/examples/simple.rs"
 
+[[example]]
+name = "random"
+path = "rust/examples/random.rs"
+
 [[bench]]
 name = "void"
 path = "rust/benches/void.rs"
