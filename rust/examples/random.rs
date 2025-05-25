@@ -1,48 +1,44 @@
-use uuid::{uuid, Uuid};
-use warp::r#type::ComputedType;
-use warp::signature::function::{Function, FunctionGUID, NAMESPACE_FUNCTION};
-use warp::signature::Data;
-use warp::symbol::class::SymbolClass;
-use warp::symbol::Symbol;
-
-fn create_test_function(name: String) -> Function {
-    Function {
-        symbol: Symbol {
-            name: name.to_string(),
-            modifiers: Default::default(),
-            class: SymbolClass::Function,
-        },
-        guid: Uuid::new_v5(&NAMESPACE_FUNCTION, &name.as_bytes()).into(),
-        constraints: Default::default(),
-        ty: rand::random(),
-    }
-}
-
-use std::fs::File;
-use std::io::Write;
+use std::env;
+use warp::chunk::{Chunk, ChunkKind, CompressionType};
+use warp::mock::{mock_function, mock_function_type_class, mock_type};
+use warp::r#type::chunk::TypeChunk;
+use warp::signature::chunk::SignatureChunk;
+use warp::WarpFileHeader;
 
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
+    let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
-        eprintln!("Usage: {} <output file>", args[0]);
+        eprintln!("Usage: {} <count>", args[0]);
         std::process::exit(1);
     }
+    let count: u32 = args[1].parse().expect("Valid integer");
 
-    let output_file = &args[1];
-    let mut file = File::create(output_file).expect("Unable to create file");
+    // Fill out a signature chunk with functions.
+    let mut functions = Vec::new();
+    for i in 0..count {
+        functions.push(mock_function(&format!("function_{}", i)));
+    }
+    let _signature_chunk = SignatureChunk::new(&functions).expect("Failed to create chunk");
+    let signature_chunk = Chunk::new(
+        ChunkKind::Signature(_signature_chunk),
+        CompressionType::Zstd,
+    );
+    println!("Created signature chunk with {} functions...", count);
 
-    let function_count = 50;
-    let type_count = 50;
+    // Fill out a type chunk with types.
+    let mut types = Vec::new();
+    for i in 0..count {
+        types.push(mock_type(
+            &format!("type_{}", i),
+            mock_function_type_class(),
+        ));
+    }
+    let _type_chunk = TypeChunk::new(&types).expect("Failed to create chunk");
+    let type_chunk = Chunk::new(ChunkKind::Type(_type_chunk), CompressionType::Zstd);
+    println!("Created type chunk with {} types...", types.len());
 
-    let functions = (0..function_count)
-        .map(|i| create_test_function(format!("func_{}", i)))
-        .collect();
+    let file = warp::WarpFile::new(WarpFileHeader::new(), vec![signature_chunk, type_chunk]);
+    println!("Created file with {} chunks...", file.chunks.len());
 
-    let types = (0..type_count)
-        .map(|_| ComputedType::new(rand::random()))
-        .collect();
-
-    let first_data = Data::new(functions, types);
-    file.write_all(&first_data.to_bytes())
-        .expect("Unable to write file");
+    std::fs::write("random.warp", file.to_bytes()).expect("Failed to write file");
 }

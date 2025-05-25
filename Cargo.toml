@@ -1,28 +1,13 @@
-[package]
-name = "warp"
-version = "0.1.0"
-edition = "2021"
-license = "Apache-2.0"
+[workspace]
+resolver = "2"
+members = [
+    "rust",
+    "rust/fuzz",
+    "warp_cli"
+]
 
-[lib]
-path = "rust/lib.rs"
-
-[dependencies]
-flatbuffers = "24.3.25"
-bon = "2.3.0"
-uuid = { version = "1.11.0", features = ["v5"]}
-rand = "0.8.5"
-flate2 = "1.0.34"
-
-[features]
-default = []
-gen_flatbuffers = ["dep:flatbuffers-build"]
-
-[dev-dependencies]
-criterion = "0.5.1"
-
-[build-dependencies]
-flatbuffers-build = { git = "https://github.com/emesare/flatbuffers-build", features = ["vendored"], optional = true }
+[workspace.dependencies]
+warp = { path = "rust" }
 
 [profile.release]
 panic = "abort"
@@ -31,16 +16,3 @@ debug = "full"
 
 [profile.bench]
 lto = true
-
-[[example]]
-name = "simple"
-path = "rust/examples/simple.rs"
-
-[[example]]
-name = "random"
-path = "rust/examples/random.rs"
-
-[[bench]]
-name = "void"
-path = "rust/benches/void.rs"
-harness = false

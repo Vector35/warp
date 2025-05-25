@@ -57,3 +57,10 @@ generated/
 
 *.vsix
 *.deb
+
+# cargo-mutants
+mutants*
+
+*.warp
+*.sbin
+!fixtures/*.warp

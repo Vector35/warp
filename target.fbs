@@ -1,0 +1,10 @@
+namespace TargetBin;
+
+table Target {
+    // TODO: Further integration with other tools will likely need a actual mapping for target names.
+    // The architecture name for the target, this can be implementation specific.
+    architecture:string;
+    // The platform name for the target, this can be implementation specific.
+    platform:string;
+    // TODO: Extend with target specific information, calling conventions etc...
+}

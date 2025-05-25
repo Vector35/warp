@@ -1,12 +1,9 @@
 namespace SymbolBin;
 
-table FunctionSymbolClass {}
-
-table DataSymbolClass {}
-
-union SymbolClass {
-    FunctionSymbolClass,
-    DataSymbolClass
+enum SymbolClass : ubyte {
+    Function,
+    Data,
+    Bare
 }
 
 enum SymbolModifiers : ubyte (bit_flags) {
@@ -18,9 +15,7 @@ enum SymbolModifiers : ubyte (bit_flags) {
 }
 
 table Symbol {
-    // TODO: We should be able to store metadata on this...
-    // TODO: Metadata could include raw names and long names.
     name:string;
     modifiers:SymbolModifiers;
-    class:SymbolClass (required);
+    class:SymbolClass;
 }

@@ -1,0 +1,51 @@
+include "type.fbs";
+include "symbol.fbs";
+include "signature.fbs";
+include "target.fbs";
+
+namespace Warp;
+
+file_identifier "WARP";
+file_extension "warp";
+
+enum ChunkType : ubyte {
+    Signatures = 0,
+    Types = 1,
+}
+
+enum CompressionType : ubyte {
+    None = 0,
+    Zstd = 1,
+}
+
+table ChunkHeader {
+    version:ushort;
+    type:ChunkType;
+    compression_type:CompressionType;
+    // Size in bytes of the uncompressed data.
+    // This is provided so that readers can allocate allocate the size of the chunk before reading.
+    // Because the size of flatbuffers cannot exceed 2GB we limit size to 32 bits.
+    size:uint;
+    // The "target" of the chunk, this is used currently only used as a key for architecture & platform.
+    target:TargetBin.Target;
+}
+
+table Chunk {
+    header:ChunkHeader (required);
+    // TODO: To support more than 2gb we need to make this offset64, however rust fb codegen does not support currently.
+    data:[ubyte];
+}
+
+table FileHeader {
+    version:ushort;
+    // TODO: Analysis information may want to be guarded behind some metadata.
+    // TODO: For example, we might want to store the compiler or language here to guard from this information from being read.
+}
+
+// The file format used to store analysis data.
+table File {
+    header:FileHeader (required);
+    chunks:[Chunk];
+}
+
+root_type File;

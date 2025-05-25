@@ -1,0 +1,31 @@
+[package]
+name = "warp"
+version = "1.0.0"
+edition = "2021"
+license = "Apache-2.0"
+
+[dependencies]
+flatbuffers = "25.2.10"
+bon = "3.6.4"
+uuid = { version = "1.17.0", features = ["v5"]}
+flate2 = "1.1.2"
+itertools = "0.14"
+
+[features]
+default = []
+gen_flatbuffers = ["dep:flatbuffers-build"]
+
+[dev-dependencies]
+criterion = "0.6.0"
+insta = { version = "1.43.1", features = ["yaml"] }
+
+[build-dependencies]
+flatbuffers-build = { git = "https://github.com/emesare/flatbuffers-build", rev = "44410b9", features = ["vendored"], optional = true }
+
+[[bench]]
+name = "type"
+harness = false
+
+[[bench]]
+name = "chunk"
+harness = false

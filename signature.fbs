@@ -3,44 +3,58 @@ include "symbol.fbs";
 
 namespace SigBin;
 
-file_identifier "SBIN";
-file_extension "sbin";
-
-table BasicBlock {
-    guid:string (required);
-    // TODO: successors:[string];
-    // TODO: predecessors:[string];
+struct BasicBlockGUID {
+    value:[ubyte:16];
 }
 
-table FunctionConstraint {
-    guid:string;
-    // In cases where a function guid was not able to be generated, we can match on symbol.
-    symbol:SymbolBin.Symbol;
+struct ConstraintGUID {
+    value:[ubyte:16];
+}
+
+struct FunctionGUID {
+    value:[ubyte:16];
+}
+
+table BasicBlock {
+    guid:BasicBlockGUID (required);
+    // TODO: successors:[BasicBlockGUID];
+    // TODO: predecessors:[BasicBlockGUID];
+}
+
+table Constraint {
+    guid:ConstraintGUID (required);
     // The byte offset from the start of the constrained function.
     // A negative number would indicate that the constraint occurs before the start of the function.
     offset:long;
 }
 
-table FunctionConstraints {
-    // Adjacent functions.
-    adjacent:[FunctionConstraint];
-    // Call sites within the function.
-    call_sites:[FunctionConstraint];
-    // Callers to the function.
-    caller_sites:[FunctionConstraint];
+table FunctionComment {
+    offset:int64;
+    text:string (required);
+}
+
+// TODO: This is extremely naive, cant handle stack slot re-use.
+table FunctionVariable {
+    offset:int64;
+    name:string;
+    location:TypeBin.LocationClass (required);
+    type:TypeBin.Type;
+    // TODO: Possible value set. (to assert a value)
 }
 
 table Function {
     // TODO: Add architecture, this is required to support multi-arch binaries...
-    guid:string (required);
+    // TODO: Make guid a key when https://github.com/google/flatbuffers/issues/8603 is fixed.
+    guid:FunctionGUID (required);
     symbol:SymbolBin.Symbol;
     type:TypeBin.Type;
-    constraints:FunctionConstraints;
+    constraints:[Constraint];
+    comments:[FunctionComment];
+    variables:[FunctionVariable];
 }
 
-table Data {
-    functions:[Function];
-    types:[TypeBin.ComputedType];
+table SignatureChunk {
+    functions:[Function] (required);
 }
 
-root_type Data;
+root_type SignatureChunk;

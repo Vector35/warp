@@ -1,7 +1,10 @@
+include "target.fbs";
+
 namespace TypeBin;
 
-file_identifier "TBIN";
-file_extension "tbin";
+struct TypeGUID {
+    value:[ubyte:16];
+}
 
 struct UnsignedBitOffset {
     value:ulong;
@@ -23,44 +26,21 @@ struct BitWidth {
     value:ushort;
 }
 
-table ConstantModifierClass {}
-table VolatileModifierClass {}
-
-table DescriptorModifierClass {
-    description:string;
+enum TypeModifiers : ubyte (bit_flags) {
+    Constant = 0,
+    Volatile = 1,
 }
 
-table MetadataModifierClass {
-    key:string;
+enum MetadataValueType : ubyte {
+    Raw = 0,
+    String = 1,
+}
+
+// Used for tooling specific metadata.
+table TypeMetadata {
+    key:string (key, required);
+    value_type:MetadataValueType;
     value:[ubyte];
-}
-
-union TypeModifierClass {
-    ConstantModifierClass,
-    VolatileModifierClass,
-    DescriptorModifierClass,
-    // Used for tooling specific metadata.
-    // If the metadata can be generic create a new modifier class.
-    MetadataModifierClass
-}
-
-table TypeModifier {
-    // TODO: Add modifier confidence?
-    class:TypeModifierClass;
-}
-
-table AccessAlignment {}
-
-table FixedAlignment {
-    width:BitWidth;
-}
-
-union TypeAlignment {
-    // TODO: Document wording
-    // Alignment is "natural" to the access width.
-    AccessAlignment,
-    // Alignment is fixed to a width, i.e. __packed is 8 bits
-    FixedAlignment
 }
 
 // A zero sized type with no information.
@@ -187,20 +167,13 @@ union LocationClass {
     StackLocation,
 }
 
-table FunctionMemberLocation {
-    // TODO: Instead of saying register or stack, we should say positional or variadic
-    // TODO: Then with the positional index we can associate it with the calling convention...
-    class:LocationClass;
-}
-
 table FunctionMember {
     // The name of the function member, optional in cases where one is not observed.
     name:string;
-    // TODO: What if function members did not have a type? use whole register? stack with zero size?
+    // TODO: What if function members did not have a type? use whole register? stack with zero size? (access sized type)
     type:Type (required);
     // If the location is not available then default to the location specified by the member index.
-    // NOTE: The locations must be equal to or greater than the size of `type`.
-    locations:[FunctionMemberLocation];
+    location:LocationClass;
 }
 
 table Function {
@@ -228,7 +201,7 @@ table Function {
 //      a. In the event of a self reference we could reference based off name?
 table Referrer {
     // Unique GUID, can either be in-memory, on-disk, or networked.
-    guid:string;
+    guid:TypeGUID;
     name:string;
 }
 
@@ -254,22 +227,23 @@ table Type {
     class:TypeClass (required);
     // Confidence is assumed to be maximal if not specified. Any type with a lesser confidence can be assumed to be less truthy.
     confidence:ubyte = 255;
-    // TODO: Change docs.
-    // Alignment of type, if not present assume AccessAlignment.
-    alignment:TypeAlignment;
-    // Modifiers for the type, can store arbitrary data as well.
-    modifiers:[TypeModifier];
+    // Alignment of type in bits, a value of 0 is the "natural" access alignment.
+    // A C type that is marked __packed would be a value of 8, as in, byte aligned.
+    alignment:ushort = 0;
+    modifiers:TypeModifiers;
+    // Metadata for the type, store arbitrary data, useful for tooling specific stuff like comments.
+    metadata:[TypeMetadata];
     // A list of older versions of the type, this is used to update references to the latest.
-    ancestors:[string];
+    ancestors:[TypeGUID];
 }
 
 table ComputedType {
-    guid:string (required);
+    guid:TypeGUID (required);
     type:Type;
 }
 
-table Data {
-    types:[ComputedType];
+table TypeChunk {
+    types:[ComputedType] (required);
 }
 
-root_type Data;
+root_type TypeChunk;

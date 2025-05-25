@@ -15,6 +15,19 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - run: cargo test
 
+  # Check lints with clippy
+  clippy:
+    name: cargo clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Ensure clippy is installed
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy
+      - name: Clippy Check
+        uses: clechasseur/rs-clippy-check@v4
+
   # Check formatting with rustfmt
   formatting:
     name: cargo fmt
