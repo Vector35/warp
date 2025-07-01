@@ -21,15 +21,15 @@ pub struct FindOp {
 
 impl FindOp {
     pub fn dump_function(&self, function: &Function) {
-        println!("Function: {:?}", function);
+        println!("Function: {function:?}");
     }
 
     pub fn dump_type(&self, ty: &ComputedType) {
-        println!("Type: {:?}", ty);
+        println!("Type: {ty:?}");
     }
 
     pub fn find_in_signature(&self, func: &Function) -> bool {
-        let str = format!("{:?}", func);
+        let str = format!("{func:?}");
         str.contains(self.any.as_deref().unwrap_or(""))
     }
 
@@ -40,7 +40,7 @@ impl FindOp {
     }
 
     pub fn find_in_computed_type(&self, computed_ty: &ComputedType) -> bool {
-        let str = format!("{:?}", computed_ty);
+        let str = format!("{computed_ty:?}");
         str.contains(self.any.as_deref().unwrap_or(""))
     }
 
