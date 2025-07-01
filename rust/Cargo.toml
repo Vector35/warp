@@ -3,6 +3,7 @@ name = "warp"
 version = "1.0.0"
 edition = "2021"
 license = "Apache-2.0"
+rust-version = "1.83.0"
 
 [dependencies]
 flatbuffers = "25.2.10"
