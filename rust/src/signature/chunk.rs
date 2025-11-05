@@ -118,7 +118,7 @@ impl<'fbb> ChunkHandler<'fbb> for SignatureChunk<'fbb> {
         // We must verify the buffer before we can create a SignatureChunk.
         // See SignatureChunk::object for more details.
         let verify_opts = VerifierOptions {
-            max_tables: 10_000_000,
+            max_tables: 100_000_000,
             ..Default::default()
         };
         let _verified_object = fb::root_as_signature_chunk_with_opts(&verify_opts, &data).ok()?;

@@ -123,7 +123,7 @@ impl<'fbb> ChunkHandler<'fbb> for TypeChunk<'fbb> {
         // We must verify the buffer before we can create a TypeChunk.
         // See TypeChunk::object for more details.
         let verify_opts = VerifierOptions {
-            max_tables: 10_000_000,
+            max_tables: 100_000_000,
             ..Default::default()
         };
         let _verified_object = fb::root_as_type_chunk_with_opts(&verify_opts, &data).ok()?;
