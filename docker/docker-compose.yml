@@ -1,0 +1,18 @@
+services:
+  sigem:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      BN_LICENSE_FILE: /run/secrets/license
+    volumes:
+      - ./binaryninja:/binaryninja:ro
+      - ./signatures:/signatures
+      - ./data:/data:ro
+    secrets:
+      - license
+    command: [ "/data/a.out", "/signatures/a" ]
+
+secrets:
+  license:
+    file: license.dat
