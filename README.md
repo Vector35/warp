@@ -24,7 +24,7 @@ To integrate with **WARP** function matching, you must be able to:
 
 ### Creating a Function GUID
 
-The function GUID is the UUIDv5 of the basic block GUIDs (sorted highest to lowest start address) that make up the function.
+The function GUID is the UUIDv5 of the basic block GUIDs (sorted by start address, lowest to highest) that make up the function.
 
 #### Example
 
